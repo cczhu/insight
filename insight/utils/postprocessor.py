@@ -24,7 +24,10 @@ def read_and_preprocess_tables(
         table_folder='/home/cczhu/InsightData/flickr_meta/',
         master_table='master_table.hdf5',
         popular_table='master_table_popular.hdf5',
-        popular_exif='master_table_popular_exif.hdf5'):
+        popular_exif='master_table_popular_exif.hdf5',
+        savepath='/home/cczhu/InsightData/flickr_meta_processed/',
+        master_table_processed='master_table_processed.hdf5',
+        popular_table_processed='popular_table_processed.hdf5'):
 
     # Read tables.
     mtab = pd.read_hdf(table_folder + master_table, 'table')
@@ -49,19 +52,5 @@ def read_and_preprocess_tables(
     extract_times(mtab)
     extract_times(poptab)
 
-    return mtab, poptab
-
-
-def _contains_all(x, wanted):
-    return all(item in x for item in wanted)
-
-
-def search_tags(mtab, phrase):
-    phrase_reduced = re.sub('[^0-9A-z\s]', '', phrase.lower())
-    search_args = phrase_reduced.split()
-    return mtab['tags'].apply(_contains_all, args=(search_args,))
-
-
-def make_flickr_link(row):
-    return 'https://www.flickr.com/photos/{owner}/{photoid}'.format(
-        photoid=row['id'], owner=row['owner'])
+    mtab.to_hdf(savepath + master_table_processed, 'table')
+    poptab.to_hdf(savepath + popular_table_processed, 'table')
