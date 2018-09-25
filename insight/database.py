@@ -34,4 +34,4 @@ class FlickrPhotosDatabase:
         else:
             ctab = self.mtab
         search_result_mask = self.search_tags(ctab, phrase)
-        return ctab[search_result_mask]
+        return ctab[search_result_mask].copy()

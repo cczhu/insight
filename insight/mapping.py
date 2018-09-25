@@ -3,10 +3,6 @@ import folium
 from matplotlib import colors as mpl_colors
 from matplotlib import cm as mpl_cm
 
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import NearestNeighbors
-
 
 plasma_cmap = mpl_cm.get_cmap('plasma')
 
@@ -31,23 +27,6 @@ toronto_longlat = TorontoLongLat()
 def make_flickr_link(row):
     return 'https://www.flickr.com/photos/{owner}/{photoid}'.format(
         photoid=row['id'], owner=row['owner'])
-
-
-def simple_clustering(photos_longlat):
-    # Feature scaling.
-    X = StandardScaler().fit_transform(photos_longlat)
-
-    # https://github.com/alitouka/spark_dbscan/wiki/Choosing-parameters-of-DBSCAN-algorithm
-    nbrs = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit(X)
-    distances, indices = nbrs.kneighbors(X)
-    eps = np.percentile(distances[:, 1], 90)
-    min_samples = int(0.01 * X.shape[0])
-
-    # Use DBSCAN.
-    db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
-    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-    core_samples_mask[db.core_sample_indices_] = True
-    return db.labels_
 
 
 def make_map(results, results_background):
@@ -81,6 +60,7 @@ def make_map(results, results_background):
 
     # Plot best photo in each cluster.
     best_photo_html = """
+        Number of photos in cluster {cluster}: {n_incluster}<br>
         <h3>Best photo for cluster {cluster}</h3><br>
         <a href="{link}" target="_blank">
         <img border="0" src="{url}"></a>
@@ -94,15 +74,17 @@ def make_map(results, results_background):
     for i in range(n_cluster):
         best_idx = results.loc[results['cluster'] == i, 'views'].idxmax()
         best_photo = results.loc[best_idx, :]
+        n_incluster = np.sum(results['cluster'] == i)
         popup_html = best_photo_html.format(
             title=best_photo['title_cleaned'],
             link=make_flickr_link(best_photo),
-            cluster=best_photo['cluster'], url=best_photo['url_s'])
+            cluster=best_photo['cluster'], url=best_photo['url_s'],
+            n_incluster=n_incluster)
         if best_photo['FocalLength'] > 0:
             popup_html += best_photo_exif_html.format(
                 flen=best_photo['FocalLength'],
                 exptime=best_photo['ExposureTime'],
-                fno=best_photo['ExposureTime'],
+                fno=best_photo['FNumber'],
                 iso=best_photo['ISO'])
 
         folium.map.Marker(best_photo[['latitude', 'longitude']],

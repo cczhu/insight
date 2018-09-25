@@ -1,6 +1,7 @@
 import flask
 from . import app
 from . import db
+from . import clustering
 from . import mapping
 
 
@@ -20,7 +21,7 @@ def map_page():
         return flask.render_template("input.html", err_message=(
             "Sorry, couldn't find anything with those keywords."))
 
-    results['cluster'] = mapping.simple_clustering(
+    results['cluster'] = clustering.dbscan_clustering(
         results[['longitude', 'latitude']].values)
 
     map_TO = mapping.make_map(results, results_background)
