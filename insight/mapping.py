@@ -4,15 +4,15 @@ from matplotlib import colors as mpl_colors
 from matplotlib import cm as mpl_cm
 
 
-plasma_cmap = mpl_cm.get_cmap('plasma')
+paired_cmap = mpl_cm.get_cmap('Paired')
 
 
-def get_cluster_color(cluster_number, n_clusters):
+def get_cluster_color(cluster_number):
     if cluster_number < 0:
         return '#000000'
     else:
         return mpl_colors.rgb2hex(
-            plasma_cmap(cluster_number / (n_clusters - 1.))[:3])
+            paired_cmap((cluster_number % 12) / 12.)[:3])
 
 
 class TorontoLongLat:
@@ -45,7 +45,7 @@ def make_map(results, results_background):
 
     # Plot clusters.
     n_cluster = results['cluster'].max() + 1
-    results['color'] = [get_cluster_color(item, n_cluster)
+    results['color'] = [get_cluster_color(item)
                         for item in results['cluster'].values]
     for (ind, row) in results.iterrows():
         popup_html = ('Cluster {cluster}: <a href="{link}"'
