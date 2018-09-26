@@ -19,6 +19,4 @@ def dbscan_clustering(photos_longlat):
 
     # Use DBSCAN.
     db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
-    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-    core_samples_mask[db.core_sample_indices_] = True
     return db.labels_
