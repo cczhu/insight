@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# sklearn cython compile output
+insight/sklearn_optics/_optics_inner.c
+insight/sklearn_optics/_optics_inner.html
+
 # Distribution / packaging
 .Python
 env/
