@@ -1,6 +1,7 @@
 import flask
 from . import app
 from . import db
+from . import toronto_longlat
 from . import clustering
 from . import mapping
 
@@ -21,10 +22,10 @@ def map_page():
         return flask.render_template("input.html", err_message=(
             "Sorry, couldn't find anything with those keywords."))
 
-    results['cluster'] = clustering.dbscan_clustering(
-        results[['longitude', 'latitude']].values)
+    results['cluster'] = clustering.optics_clustering(
+        results[['longitude', 'latitude']].values, toronto_longlat)
 
-    map_TO = mapping.make_map(results, results_background)
+    map_TO = mapping.make_map(results, results_background, toronto_longlat)
     map_TO_str = map_TO.get_root().render()
 
     return flask.render_template("output.html", map_TO=map_TO_str)

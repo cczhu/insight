@@ -3,6 +3,12 @@ import numpy as np
 import re
 
 
+class TorontoLongLat:
+    """Nominatim long/lat for Toronto, Ontario, Canada."""
+    longitude = -79.387207
+    latitude = 43.653963
+
+
 def _contains_all(x, search_args_split, search_args_joined):
     split_result = all(item in x for item in search_args_split)
     joined_result = search_args_joined in x

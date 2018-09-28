@@ -15,24 +15,15 @@ def get_cluster_color(cluster_number):
             paired_cmap((cluster_number % 12) / 12.)[:3])
 
 
-class TorontoLongLat:
-    """Nominatim long/lat for Toronto, Ontario, Canada."""
-    longitude = -79.387207
-    latitude = 43.653963
-
-
-toronto_longlat = TorontoLongLat()
-
-
 def make_flickr_link(row):
     return 'https://www.flickr.com/photos/{owner}/{photoid}'.format(
         photoid=row['id'], owner=row['owner'])
 
 
-def make_map(results, results_background):
+def make_map(results, results_background, default_longlat):
 
-    map_TO = folium.Map(location=(toronto_longlat.latitude,
-                                  toronto_longlat.longitude),
+    map_TO = folium.Map(location=(default_longlat.latitude,
+                                  default_longlat.longitude),
                         zoom_start=12,
                         tiles='cartodbpositron',
                         width='100%', height='100%')
