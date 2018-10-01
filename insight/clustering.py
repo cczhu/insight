@@ -62,3 +62,21 @@ def hdbscan_clustering(photos_longlat, default_longlat, global_min_samples=10,
                                             min_cluster_size))
     hdbresult = hdbcl.fit(X)
     return hdbresult.labels_
+
+
+def three_sigma_cut(cluster_ll):
+    mean_ll = np.mean(cluster_ll, axis=0)
+    ll_dist = np.sqrt(np.sum((cluster_ll -mean_ll)**2, axis=1))
+    char_dist = np.percentile(ll_dist, 68.)
+    return ll_dist > 3 * char_dist
+
+
+def drop_outliers(results, default_longlat):
+    logitude_scaler = np.sin(default_longlat.latitude * np.pi / 180.)
+    outliers = []
+    for i in range(results['cluster'].max() + 1):
+        c_cluster = results[results['cluster'] == i]
+        c_cluster_ll = c_cluster.loc[:, ['longitude', 'latitude']].values
+        c_cluster_ll[:, 0] *= logitude_scaler
+        outliers += list(c_cluster.index[three_sigma_cut(c_cluster_ll)])
+    return np.sort(np.array(outliers))

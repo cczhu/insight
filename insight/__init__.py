@@ -25,6 +25,8 @@ app = Flask(__name__)
 # app.config.from_object(Config)
 db = database.FlickrPhotosDatabase(flickr_tables_main, flickr_tables_popular)
 toronto_longlat = database.TorontoLongLat()
+global_min_samples = 15
+master_sigma_cut = 2.5
 
 
 # Circular import, so needs to be defined after `app` is.
