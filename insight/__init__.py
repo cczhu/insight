@@ -26,6 +26,7 @@ app = Flask(__name__)
 db = database.FlickrPhotosDatabase(flickr_tables_main, flickr_tables_popular)
 toronto_longlat = database.TorontoLongLat()
 global_min_samples = 15
+global_max_eps_scaling = 1.
 master_sigma_cut = 2.5
 
 

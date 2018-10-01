@@ -21,7 +21,7 @@ def feature_scaling(photos_longlat, default_longlat):
 
 def dbscan_clustering(photos_longlat, default_longlat):
     # Feature scaling.
-    X = StandardScaler().fit_transform(photos_longlat, default_longlat)
+    X = feature_scaling(photos_longlat, default_longlat)
 
     # https://github.com/alitouka/spark_dbscan/wiki/Choosing-parameters-of-DBSCAN-algorithm
     nbrs = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit(X)
@@ -39,7 +39,7 @@ def dbscan_clustering(photos_longlat, default_longlat):
 def optics_clustering(photos_longlat, default_longlat, global_min_samples=10,
                       max_eps_scaling=1.):
     # Feature scaling.
-    X = StandardScaler().fit_transform(photos_longlat, default_longlat)
+    X = feature_scaling(photos_longlat, default_longlat)
 
     min_samples = max([global_min_samples, int(0.01 * X.shape[0])])
     max_eps = max_eps_scaling * np.mean([(X[:, 0].max() - X[:, 0].min()),
@@ -53,7 +53,7 @@ def optics_clustering(photos_longlat, default_longlat, global_min_samples=10,
 def hdbscan_clustering(photos_longlat, default_longlat, global_min_samples=10,
                        min_samples_scaling=0.5):
     # Feature scaling.
-    X = StandardScaler().fit_transform(photos_longlat, default_longlat)
+    X = feature_scaling(photos_longlat, default_longlat)
 
     min_cluster_size = max([global_min_samples, int(0.01 * X.shape[0])])
 
@@ -64,19 +64,19 @@ def hdbscan_clustering(photos_longlat, default_longlat, global_min_samples=10,
     return hdbresult.labels_
 
 
-def three_sigma_cut(cluster_ll):
+def sigma_cut(cluster_ll, sigma):
     mean_ll = np.mean(cluster_ll, axis=0)
     ll_dist = np.sqrt(np.sum((cluster_ll -mean_ll)**2, axis=1))
     char_dist = np.percentile(ll_dist, 68.)
-    return ll_dist > 3 * char_dist
+    return ll_dist > sigma * char_dist
 
 
-def drop_outliers(results, default_longlat):
+def drop_outliers(results, default_longlat, sigma):
     logitude_scaler = np.sin(default_longlat.latitude * np.pi / 180.)
     outliers = []
     for i in range(results['cluster'].max() + 1):
         c_cluster = results[results['cluster'] == i]
         c_cluster_ll = c_cluster.loc[:, ['longitude', 'latitude']].values
         c_cluster_ll[:, 0] *= logitude_scaler
-        outliers += list(c_cluster.index[three_sigma_cut(c_cluster_ll)])
+        outliers += list(c_cluster.index[sigma_cut(c_cluster_ll, sigma)])
     return np.sort(np.array(outliers))

@@ -1,8 +1,9 @@
 import flask
+import numpy as np
 from . import app
 from . import db
-from . import toronto_longlat
-from . import global_min_samples
+from . import (toronto_longlat, global_min_samples, master_sigma_cut,
+               global_max_eps_scaling)
 from . import clustering
 from . import mapping
 
@@ -25,11 +26,13 @@ def map_page():
 
     results['cluster'] = clustering.optics_clustering(
         results[['longitude', 'latitude']].values, toronto_longlat,
-        global_min_samples=global_min_samples, max_eps_scaling=1.)
+        global_min_samples=global_min_samples,
+        max_eps_scaling=global_max_eps_scaling)
 
     # Find cluster outliers and shift them to noise.
-    #outlier_indices = clustering.drop_outliers(results, toronto_longlat)
-    #results.loc[outlier_indices, 'cluster'] = -1
+    outlier_indices = clustering.drop_outliers(results, toronto_longlat,
+                                               master_sigma_cut)
+    results.loc[outlier_indices, 'cluster'] = -1
 
     map_TO = mapping.make_map(results, results_background, toronto_longlat)
     map_TO_str = map_TO.get_root().render()
