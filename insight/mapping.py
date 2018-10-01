@@ -3,7 +3,6 @@ import folium
 from matplotlib import colors as mpl_colors
 from matplotlib import cm as mpl_cm
 
-
 paired_cmap = mpl_cm.get_cmap('Paired')
 
 
@@ -18,6 +17,16 @@ def get_cluster_color(cluster_number):
 def make_flickr_link(row):
     return 'https://www.flickr.com/photos/{owner}/{photoid}'.format(
         photoid=row['id'], owner=row['owner'])
+
+
+# class MapCluster:
+
+#     def __init__(self, table):
+
+
+
+
+# def cluster_analysis()
 
 
 def make_map(results, results_background, default_longlat):
