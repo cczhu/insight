@@ -6,8 +6,9 @@
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from Cython.Distutils import build_ext
+import numpy
 
-requirements = [ ]
+requirements = []
 
 setup_requirements = ['pytest-runner', ]
 
@@ -15,7 +16,8 @@ test_requirements = ['pytest', ]
 
 ext_modules = [
     Extension("insight.sklearn_optics._optics_inner",
-              ["./insight/sklearn_optics/_optics_inner.pyx"]),
+              ["./insight/sklearn_optics/_optics_inner.pyx"],
+              include_dirs=[numpy.get_include()]),
 ]
 
 setup(
