@@ -4,15 +4,19 @@
 """The setup script."""
 
 from setuptools import setup, find_packages
-
-with open('README.rst') as readme_file:
-    readme = readme_file.read()
+from setuptools.extension import Extension
+from Cython.Distutils import build_ext
 
 requirements = [ ]
 
 setup_requirements = ['pytest-runner', ]
 
 test_requirements = ['pytest', ]
+
+ext_modules = [
+    Extension("insight.sklearn_optics._optics_inner",
+              ["./insight/sklearn_optics/_optics_inner.pyx"]),
+]
 
 setup(
     author="Chenchong Zhu",
@@ -31,7 +35,8 @@ setup(
     description="Insight project.",
     install_requires=requirements,
     license="BSD license",
-    long_description=readme,
+    long_description=("Photo geolocation clustering project for Insight Data "
+                      "Science Toronto"),
     include_package_data=True,
     keywords='insight',
     name='insight',
@@ -42,4 +47,6 @@ setup(
     url='https://github.com/cczhu/insight',
     version='0.1.0',
     zip_safe=False,
+    cmdclass={'build_ext': build_ext},
+    ext_modules=ext_modules,
 )

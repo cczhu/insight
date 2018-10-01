@@ -1,6 +1,10 @@
 import flask
+import numpy as np
 from . import app
 from . import db
+from . import (toronto_longlat, global_min_samples, master_sigma_cut,
+               global_max_eps_scaling)
+from . import clustering
 from . import mapping
 
 
@@ -16,14 +20,21 @@ def map_page():
     results = db.get_search_results(search_term, table='popular')
     results_background = db.get_search_results(search_term)
 
-    if len(results) == 0:
+    if len(results) < global_min_samples:
         return flask.render_template("input.html", err_message=(
             "Sorry, couldn't find anything with those keywords."))
 
-    results['cluster'] = mapping.simple_clustering(
-        results[['longitude', 'latitude']].values)
+    results['cluster'] = clustering.optics_clustering(
+        results[['longitude', 'latitude']].values, toronto_longlat,
+        global_min_samples=global_min_samples,
+        max_eps_scaling=global_max_eps_scaling)
 
-    map_TO = mapping.make_map(results, results_background)
+    # Find cluster outliers and shift them to noise.
+    outlier_indices = clustering.drop_outliers(results, toronto_longlat,
+                                               master_sigma_cut)
+    results.loc[outlier_indices, 'cluster'] = -1
+
+    map_TO = mapping.make_map(results, results_background, toronto_longlat)
     map_TO_str = map_TO.get_root().render()
 
     return flask.render_template("output.html", map_TO=map_TO_str)
