@@ -1,4 +1,5 @@
 import flask
+import branca
 from . import app
 from . import db
 from . import (toronto_longlat, global_min_samples, master_sigma_cut,
@@ -38,9 +39,11 @@ def map_page():
 
     map_TO = mapping.make_map(results, results_background,
                               cluster_info, toronto_longlat)
-    map_TO_str = map_TO.get_root().render()
+    map_TO_root = map_TO.get_root()
+    map_TO_root.header._children['bootstrap'] = branca.element.JavascriptLink(
+        r"{{ url_for('static', filename='css/insight_project.css') }}")
 
-    return flask.render_template("output.html", map_TO=map_TO_str)
+    return flask.render_template("output.html", map_TO=map_TO_root.render())
 
 
 @app.route('/about')

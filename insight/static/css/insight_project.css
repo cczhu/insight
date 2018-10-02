@@ -1,22 +1,96 @@
-/*body {
-  padding-top: 50px;
-}
-*/
-
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-h1, h2, h3 {
-  font-family: Montserrat, Helvetica, sans-serif;
-  font-weight: 600;
+h1, h2, h3, h4, h5, h6 {
+  font-family: Poppins, Helvetica, sans-serif;
 }
 
-.navbar {
-    font-family: Montserrat, Helvetica, sans-serif;
-    font-weight: 400;
-    background-color: #222;
+h3 {
+  font-weight: 300;
+}
+
+.title-highlight {
+  color: #ffed30;
+}
+
+.navbar-custom {
+  font-family: Poppins, Helvetica, sans-serif;
+  font-weight: 400;
+  background-color: #212121;
+  border-color: transparent;
+  margin-bottom: 0;
+  border-bottom: 0px solid rgba(255,255,255,.3);
+  height: 50px;
+}
+
+.navbar-charles {
+  font-family: Poppins, Helvetica, sans-serif;
+  font-weight: 400;
+  background-color: #212121;
+  border-color: transparent;
+  margin-bottom: 0;
+  border-bottom: 0px solid rgba(255,255,255,.3);
+  height: 50px;
+}
+
+.navbar-custom .navbar-brand {
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+}
+
+.navbar-custom .navbar-brand:hover,
+.navbar-custom .navbar-brand:focus,
+.navbar-custom .navbar-brand:active,
+.navbar-custom .navbar-brand.active {
+  color: #fff;
+}
+
+.navbar-custom .navbar-toggle {
+  background-color: #fed136;
+  border-color: #fed136;
+  color: white;
+  font-size: 12px;
+}
+
+.navbar-custom .navbar-toggle:hover,
+.navbar-custom .navbar-toggle:focus {
+  background-color: #ffed30;
+}
+
+.navbar-custom .navbar-toggle:hover,
+.navbar-custom .navbar-toggle:focus {
+  background-color: #fed136;
+}
+.navbar-custom .nav li a {
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: white;
+  align-items: center;
+  display: flex;
+}
+.navbar-custom .nav li a:hover,
+.navbar-custom .nav li a:focus {
+  color: #ff5202;
+  outline: none;
+}
+.navbar-custom .navbar-nav > .active > a {
+  border-radius: 0;
+  color: white;
+  background-color: #fed136;
+}
+.navbar-custom .navbar-nav > .active > a:hover,
+.navbar-custom .navbar-nav > .active > a:focus {
+  color: white;
+  background-color: #fec503;
+}
+
+.body-content {
+  padding-top: 50px;
+  height: 100%;
+  background-color: #000;
 }
 
 .welcome {
@@ -40,7 +114,7 @@ h1, h2, h3 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #ffe6a3;
+  color: #fff;
   text-shadow: 1px 1px 3px #000;
 }
 
@@ -55,8 +129,4 @@ h1, h2, h3 {
   text-align: center;
   color: #777;
   text-shadow: 1px 1px 3px #000;
-}
-
-.benedict {
-  font-family: Montserrat, Helvetica, sans-serif;
 }

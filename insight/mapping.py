@@ -13,12 +13,12 @@ def make_flickr_link(row):
         photoid=row['id'], owner=row['owner'])
 
 
-def make_photo_popup(row):
+def make_photo_popup(row, cluster_names):
     popup_html = ('Cluster {cluster}:<br>'
                   '<a href="{link}" target="_blank">'
                   '<img border="0" src="{url}"></a>').format(
         link=make_flickr_link(row), url=row['url_s'],
-        cluster=(row['cluster'] if row['cluster'] >= 0 else
+        cluster=(cluster_names[row['cluster']] if row['cluster'] >= 0 else
                  'background'))
     return popup_html
 
@@ -34,14 +34,14 @@ class Cluster:
 
 class ClusterInfo:
 
-    best_photo_html = """
-        <h3>Cluster {name}</h3><br>
+    best_photo_html = r"""
+        <h3>Cluster {name}</h3>
         Number of photos: {n_photos}<br>
         Avg. views per photo: {avg_views}<br>
         Most popular photos:<br>
         <a href="{link}" target="_blank">
-        <img border="0" src="{pic_url_s}"></a>
-        <br> Camera: {camera}<br>
+        <img border="0" width={width}px src="{pic_url_s}"></a>
+        <br>Camera: {camera}<br>
         Lens: {lens}<br>
         Focal Length: {flen}<br>
         Exposure: {exptime}<br>
@@ -134,6 +134,7 @@ class ClusterInfo:
             avg_views=cluster.avg_views,
             link=make_flickr_link(best_photo),
             pic_url_s=best_photo['url_s'],
+            width=min(300, max(250, best_photo['width_s'])),
             camera=self.get_camera_or_lens(best_photo['Camera']),
             lens=self.get_camera_or_lens(best_photo['Lens']),
             flen=self.get_focal_length(best_photo['FocalLength']),
@@ -163,7 +164,8 @@ def make_map(results, results_background, cluster_info, default_longlat):
                         for item in results['cluster'].values]
     for (ind, row) in results.iterrows():
         folium.CircleMarker((row['latitude'], row['longitude']),
-                            popup=make_photo_popup(row),
+                            popup=make_photo_popup(row,
+                                                   cluster_info.cluster_order),
                             radius=(1 if row['cluster'] < 0 else 2),
                             color=row['color'],
                             fill_color=row['color']).add_to(map_TO)
@@ -171,7 +173,8 @@ def make_map(results, results_background, cluster_info, default_longlat):
     # Plot best photo in each cluster.
     for i in range(len(cluster_info.clusters)):
         centroid, popup_html = cluster_info.get_cluster_infographic(i)
-        folium.map.Marker(centroid[::-1], popup=popup_html,
+        folium.map.Marker(centroid[::-1],
+                          popup=folium.Popup(html=popup_html, max_width=300),
                           icon=None).add_to(map_TO)
 
     return map_TO
