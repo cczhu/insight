@@ -33,7 +33,11 @@ def map_page():
         sigma=master_sigma_cut)
     results.loc[outlier_indices, 'cluster'] = -1
 
-    map_TO = mapping.make_map(results, results_background, toronto_longlat)
+    # Get cluster details to prepare for mapping.
+    cluster_info = mapping.ClusterInfo(results, centroids)
+
+    map_TO = mapping.make_map(results, results_background,
+                              cluster_info, toronto_longlat)
     map_TO_str = map_TO.get_root().render()
 
     return flask.render_template("output.html", map_TO=map_TO_str)
