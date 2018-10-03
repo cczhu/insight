@@ -78,7 +78,7 @@ class ClusterInfo:
     @staticmethod
     def get_cluster_color(cluster_number):
         if cluster_number < 0:
-            return '#777'
+            return '#777777'
         else:
             return mpl_colors.rgb2hex(
                 paired_cmap((cluster_number % 12) / 12.)[:3])
