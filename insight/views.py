@@ -1,5 +1,5 @@
 import flask
-import branca
+import re
 from . import app
 from . import db
 from . import (toronto_longlat, global_min_samples, master_sigma_cut,
@@ -8,15 +8,20 @@ from . import clustering
 from . import mapping
 
 
+bad_css = (r'    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/'
+           r'bootstrap/3.2.0/css/bootstrap.min.css"/>\n    <link rel='
+           r'"stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/'
+           r'3.2.0/css/bootstrap-theme.min.css"/>\n')
+
+
 @app.route('/')
 @app.route('/input')
 def input_page():
     return flask.render_template("input.html", err_message="")
 
 
-@app.route('/output')
-def map_page():
-    search_term = flask.request.args.get('search_keywords')
+def get_search_results(search_term):
+
     results = db.get_search_results(search_term, table='popular')
     results_background = db.get_search_results(search_term)
 
@@ -39,11 +44,17 @@ def map_page():
 
     map_TO = mapping.make_map(results, results_background,
                               cluster_info, toronto_longlat)
-    map_TO_root = map_TO.get_root()
-    map_TO_root.header._children['bootstrap'] = branca.element.JavascriptLink(
-        r"{{ url_for('static', filename='css/insight_project.css') }}")
+    return map_TO.get_root()
 
-    return flask.render_template("output.html", map_TO=map_TO_root.render())
+
+@app.route('/output')
+def map_page():
+    search_term = flask.request.args.get('search_keywords')
+    map_TO_root = get_search_results(search_term)
+    map_TO_render = map_TO_root.render()
+    # Hack to remove adding redundant bootstrap CSS files.
+    map_TO_render = re.sub(bad_css, '', map_TO_render)
+    return flask.render_template("output.html", map_TO=map_TO_render)
 
 
 @app.route('/about')
