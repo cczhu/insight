@@ -13,7 +13,6 @@ bad_css = (r'    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/'
            r'"stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/'
            r'3.2.0/css/bootstrap-theme.min.css"/>\n')
 
-
 @app.route('/')
 @app.route('/input')
 def input_page():
@@ -26,8 +25,7 @@ def get_search_results(search_term):
     results_background = db.get_search_results(search_term)
 
     if len(results) < global_min_samples:
-        return flask.render_template("input.html", err_message=(
-            "Sorry, couldn't find anything with those keywords."))
+        return None
 
     # Clustering (results is implicitly being altered by clst).
     clst = clustering.Clustering(results, toronto_longlat)
@@ -51,6 +49,9 @@ def get_search_results(search_term):
 def map_page():
     search_term = flask.request.args.get('search_keywords')
     map_TO_root = get_search_results(search_term)
+    if map_TO_root is None:
+        return flask.render_template("input.html", err_message=(
+            "Sorry, couldn't find anything with those keywords."))
     map_TO_render = map_TO_root.render()
     # Hack to remove adding redundant bootstrap CSS files.
     map_TO_render = re.sub(bad_css, '', map_TO_render)
