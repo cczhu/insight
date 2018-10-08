@@ -48,6 +48,9 @@ def get_search_results(search_term):
 @app.route('/output')
 def map_page():
     search_term = flask.request.args.get('search_keywords')
+    # If user leaves the search bar blank, use "CN Tower".
+    if search_term == "":
+        search_term = "CN Tower"
     map_TO_root = get_search_results(search_term)
     if map_TO_root is None:
         return flask.render_template("input.html", err_message=(

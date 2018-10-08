@@ -12,7 +12,7 @@ h3 {
 }
 
 .title-highlight {
-  color: #ffed30;
+  color: #ffe330; /* #ffed30 light #fed136 darker */
 }
 
 .navbar-custom {
@@ -49,20 +49,20 @@ h3 {
 }
 
 .navbar-custom .navbar-toggle {
-  background-color: #fed136;
-  border-color: #fed136;
+  background-color: #ffe330;
+  border-color: #ffe330;
   color: white;
   font-size: 12px;
 }
 
 .navbar-custom .navbar-toggle:hover,
 .navbar-custom .navbar-toggle:focus {
-  background-color: #ffed30;
+  background-color: #ffe330;
 }
 
 .navbar-custom .navbar-toggle:hover,
 .navbar-custom .navbar-toggle:focus {
-  background-color: #fed136;
+  background-color: #ffe330;
 }
 .navbar-custom .nav li a {
   font-weight: 400;
@@ -73,24 +73,23 @@ h3 {
 }
 .navbar-custom .nav li a:hover,
 .navbar-custom .nav li a:focus {
-  color: #ff5202;
+  color: #ffe330;
   outline: none;
 }
 .navbar-custom .navbar-nav > .active > a {
   border-radius: 0;
-  color: white;
-  background-color: #fed136;
+  color: #ffe330;
+  background-color: #555;
 }
 .navbar-custom .navbar-nav > .active > a:hover,
 .navbar-custom .navbar-nav > .active > a:focus {
-  color: white;
-  background-color: #fec503;
+  color: #ffe330;
+  background-color: #777;
 }
 
 .body-content {
   padding-top: 50px;
   height: 100%;
-  background-color: #000;
 }
 
 .welcome {
@@ -125,8 +124,52 @@ h3 {
   font-weight: 500;
 }
 
+.welcome-text h3 {
+  font-size: 1.8em;
+  font-weight: 300;
+}
+
+.welcome-text h4 {
+  font-size: 1.3em;
+  font-weight: 400;
+}
+
+.welcome-text a {
+  font-weight: 400;
+  color: #ffe330;
+}
+
+.welcome-text a:hover,
+.welcome-text a:focus {
+  text-decoration: underline;
+}
+
+
 .err-message {
   text-align: center;
-  color: #777;
+  color: #ffe330;
+  font-size: 1.2em;
   text-shadow: 1px 1px 3px #000;
+}
+
+.fc-snap {
+  font-family: Poppins, Helvetica, sans-serif;
+  height: 45px;
+}
+
+.btn-snap {
+  height: 45px;
+  font-family: Poppins, Helvetica, sans-serif;
+  color: #FFF;
+  border: 0px solid #000;
+  outline: 0;
+  background-color: #000;
+}
+
+.btn-snap:hover,
+.btn-snap:focus {
+  border: 0px solid #000;
+  color: #000;
+  outline: 0;
+  background-color: #ffe330;
 }
