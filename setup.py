@@ -15,8 +15,8 @@ setup_requirements = ['pytest-runner', ]
 test_requirements = ['pytest', ]
 
 ext_modules = [
-    Extension("insight.sklearn_optics._optics_inner",
-              ["./insight/sklearn_optics/_optics_inner.pyx"],
+    Extension("snapassist.sklearn_optics._optics_inner",
+              ["./snapassist/sklearn_optics/_optics_inner.pyx"],
               include_dirs=[numpy.get_include()]),
 ]
 
@@ -40,13 +40,13 @@ setup(
     long_description=("Photo geolocation clustering project for Insight Data "
                       "Science Toronto"),
     include_package_data=True,
-    keywords='insight',
-    name='insight',
-    packages=find_packages(include=['insight']),
+    keywords='snapassist',
+    name='snapassist',
+    packages=find_packages(include=['snapassist']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/cczhu/insight',
+    url='https://github.com/cczhu/snapassist',
     version='0.1.0',
     zip_safe=False,
     cmdclass={'build_ext': build_ext},
