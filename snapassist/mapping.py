@@ -270,7 +270,7 @@ def make_map(results, results_background, cluster_info, default_longlat):
                                   default_longlat.longitude),
                         zoom_start=13,
                         tiles='cartodbpositron',
-                        width='100%', height='100%')
+                        width='100%', height='85%')
 
     # Plot all photos retrieved.
     for (ind, row) in results_background.iterrows():

@@ -1,7 +1,83 @@
 {% extends "base.html" %}
 {% set active_page = "search" %}
 
-
 {% block content %}
+
+<div style="width:100%">
 {{ map_TO | safe }}
+</div>
+
+<div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 postscript">
+ <h1>Cluster Ranking</h1>
+ <br><br><hr><br><br>
+
+<div class="row cluster-info">
+<div class="col-sm-3">
+<h3>Cluster 2</h3>
+Number of photos: 17<br>
+Avg. views per photo: 331.0<br><br>
+</div>
+<div class="col-sm-6">
+<div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval=false>
+ <div class="carousel-inner">
+  <div class="item active">
+   <div class="row">
+   <div class='col-sm-8'>
+   <a href="https://www.flickr.com/photos/57756296@N06/28989170362" target="_blank">
+   <div class='carel-image-container'>
+   <div class="container-align">
+   <img src="https://farm9.staticflickr.com/8292/28989170362_740e7a418e_m.jpg" style="width:213px; height:300px;">
+   </div>
+   </div>
+   </a>
+   <div class='col-sm-4'>
+   <br>Camera: Canon EOS 60D<br>
+   Lens: 17-70mm<br>
+   Focal Length: 54 mm<br>
+   Exposure: 54 s<br>
+   F number: f/11.0<br>
+   ISO: 200<br>
+   </div>
+   </div>
+   </div>
+  </div>
+  <div class="item">
+   <div class="row">
+   <div class='col-sm-8'>
+   <a href="https://www.flickr.com/photos/47249730@N00/13246831173" target="_blank">
+   <div class='carel-image-container col-sm-8'>
+   <div class="container-align">
+   <img src="https://farm8.staticflickr.com/7274/13246831173_222c1b354a_m.jpg" style="width:300px; height:168px; display: block;">
+   </div>
+   </div>
+   </a>
+   </div>
+   <div class='col-sm-4'>
+   <br>Camera: <br>
+   Lens: <br>
+   Focal Length: <br>
+   Exposure: <br>
+   F number: <br>
+   ISO: <br>
+   </div>
+   </div>
+  </div>
+
+ </div>
+ <a class="left carousel-control" href="#myCarousel" data-slide="prev" style="background:none">
+   <span class="glyphicon glyphicon-chevron-left"></span>
+   <span class="sr-only">Previous</span>
+ </a>
+ <a class="right carousel-control" href="#myCarousel" data-slide="next" style="background:none">
+   <span class="glyphicon glyphicon-chevron-right"></span>
+   <span class="sr-only">Next</span>
+ </a>
+</div>
+</div>
+
+</div>
+<hr>
+
+</div>
+
 {% endblock %}
