@@ -7,8 +7,8 @@ __pycache__/
 *.so
 
 # sklearn cython compile output
-insight/sklearn_optics/_optics_inner.c
-insight/sklearn_optics/_optics_inner.html
+snapassist/sklearn_optics/_optics_inner.c
+snapassist/sklearn_optics/_optics_inner.html
 
 # Distribution / packaging
 .Python
