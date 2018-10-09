@@ -16,6 +16,7 @@ The web app is compatible with Python 3.5 (and may work for Python 3.6+), and
 requires the following packages::
 
     branca
+    Cython
     Flask
     flickrapi
     folium
@@ -26,8 +27,21 @@ requires the following packages::
     tables
     scikit-learn
 
+Scikit-learn's `OPTICS module
+<http://scikit-learn.org/dev/modules/generated/sklearn.cluster.OPTICS.html>`_ is
+currently not available through pip-install, so its code has been included under
+``snapassist/sklearn_optics/``.  OPTICS requires `Cython <http://cython.org/>`_ 
+(which has C package dependencies).  Once installed, build the ``_optics_inner``
+module by running::
+
+    python setup.py build_ext --inplace
+
+in the SnapAssist root folder.
+
+This module will become deprecated when scikit-learn 0.21 is released.
+
 In addition, you must possess two pandas HDF5 databases produced by the Flickr
-scrapers associated with SnapAssist (found under the `scrapers` folder)
+scrapers associated with SnapAssist (found under the ``scrapers`` folder)
 named::
 
     master_table_processed.hdf5
