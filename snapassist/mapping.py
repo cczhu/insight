@@ -75,6 +75,7 @@ best_photo_html_head = r"""<!DOCTYPE html>
 """
 
 best_photo_html_tail = r"""<h3>Cluster {name}</h3>
+Lat-Long: ({lat}, {long})<br>
 Number of photos: {n_photos}<br>
 Avg. views per photo: {avg_views}<br><br>
 <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval=false>
@@ -258,11 +259,14 @@ class ClusterInfo:
 
         popup_html = best_photo_html_tail.format(
             name=cluster_name,
+            long="{0:.7f}".format(cluster.centroid[0]),
+            lat="{0:.7f}".format(cluster.centroid[1]),
             n_photos=cluster.n_photos,
             avg_views=int(cluster.avg_views),
             carousel_elements=carousel_elements)
 
         return cluster.centroid, best_photo_html_head + '\n' + popup_html
+
 
 def make_map(results, results_background, cluster_info, default_longlat):
 
@@ -292,7 +296,7 @@ def make_map(results, results_background, cluster_info, default_longlat):
     # Plot best photo in each cluster.
     for i in range(len(cluster_info.clusters)):
         centroid, popup_html = cluster_info.get_cluster_infographic(i)
-        iframe = branca.element.IFrame(html=popup_html, width=300, height=550)
+        iframe = branca.element.IFrame(html=popup_html, width=300, height=560)
         popup = folium.Popup(iframe, max_width=300)
         folium.map.Marker(centroid[::-1], popup=popup,
                           icon=None).add_to(map_TO)
