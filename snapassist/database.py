@@ -34,10 +34,20 @@ class FlickrPhotosDatabase:
         return table['tags'].apply(_contains_all, args=(search_args_split,
                                                         search_args_joined))
 
-    def get_search_results(self, phrase, table='main'):
+    def get_single_table_search_results(self, phrase, table):
         if table == 'popular':
             ctab = self.poptab
         else:
             ctab = self.mtab
         search_result_mask = self.search_tags(ctab, phrase)
         return ctab[search_result_mask].copy()
+
+    def get_search_results(self, phrase):
+        main_results = self.get_single_table_search_results(phrase, 'main')
+        popular_results = self.get_single_table_search_results(phrase,
+                                                               'popular')
+
+        return main_results.join(
+            popular_results[['Camera', 'ExposureTime', 'FNumber',
+                             'FocalLength', 'FocalLengthIn35mmFormat',
+                             'ISO', 'Lens']])
