@@ -21,27 +21,29 @@ def input_page():
 
 def get_search_results(search_term):
 
-    results = db.get_search_results(search_term, table='popular')
-    results_background = db.get_search_results(search_term)
+    results = db.get_search_results(search_term)
 
-    if len(results) < global_min_samples:
+    if (len(results) < global_min_samples) or (
+            results['views'].max() < db.mtab_75percentile_views):
         return None
 
     # Clustering (results is implicitly being altered by clst).
-    clst = clustering.Clustering(results, toronto_longlat)
-    clst.optics_clustering(global_min_samples=global_min_samples,
-                           max_eps_scaling=global_max_eps_scaling)
+    clst = clustering.Clustering(results, toronto_longlat,
+                                 global_min_samples=global_min_samples)
+    clst.optics_clustering(max_eps_scaling=global_max_eps_scaling)
 
-    # Find cluster outliers and shift them to noise.
-    outlier_indices, centroids = clst.get_centroids_and_outliers(
-        sigma=master_sigma_cut)
+    # Find cluster outliers and shift them to noise.  For efficiency,
+    # simultaneous obtain centroids and remove any clusters that don't have a
+    # top 25% popular photo within them.
+    outlier_indices, ids, centroids = clst.trim_and_get_centroids(
+        sigma=master_sigma_cut, critical_views=db.mtab_75percentile_views,
+        critical_char_dist=0.05)
     results.loc[outlier_indices, 'cluster'] = -1
 
     # Get cluster details to prepare for mapping.
-    cluster_info = mapping.ClusterInfo(results, centroids)
+    cluster_info = mapping.ClusterInfo(results, ids, centroids)
 
-    map_TO = mapping.make_map(results, results_background,
-                              cluster_info, toronto_longlat)
+    map_TO = mapping.make_map(results, cluster_info, toronto_longlat)
     return map_TO.get_root()
 
 

@@ -15,13 +15,13 @@ def make_flickr_link(row):
         photoid=row['id'], owner=row['owner'])
 
 
-def make_photo_popup(row, cluster_names):
-    popup_html = ('Cluster {cluster}:<br>'
+def make_photo_popup(row, cluster_info):
+    popup_html = ('Cluster #{cluster}<br>'
                   '<a href="{link}" target="_blank">'
                   '<img border="0" src="{url}"></a>').format(
         link=make_flickr_link(row), url=row['url_s'],
-        cluster=(cluster_names[row['cluster']] if row['cluster'] >= 0 else
-                 'background'))
+        cluster=(cluster_info.clusters[row['cluster']].rank
+                 if row['cluster'] >= 0 else 'background'))
     return popup_html
 
 
@@ -74,7 +74,7 @@ best_photo_html_head = r"""<!DOCTYPE html>
 <body>
 """
 
-best_photo_html_tail = r"""<h3>Cluster {name}</h3>
+best_photo_html_tail = r"""<h3>Cluster #{rank}</h3>
 Lat-Long: ({lat}, {long})<br>
 Number of photos: {n_photos}<br>
 Avg. views per photo: {avg_views}<br><br>
@@ -135,20 +135,25 @@ class ClusterInfo:
     # Currently hardcoded in CSS, so hardcode it here.
     popup_width = 300
 
-    def __init__(self, table, centroids):
+    def __init__(self, table, ids, centroids):
         self.table = table
 
         # Populate clusters.
-        self.populate_clusters(centroids)
+        self.populate_clusters(ids, centroids)
 
-        # Sort clusters and make name lookup table
-        views_over_nphot = [c.avg_views / c.n_photos for c in self.clusters]
-        self.cluster_order = list(np.argsort(views_over_nphot) + 1)
+        # Sort clusters and store their rank.  (We use nphot_over_views
+        # because np.argsort(np.argsort(nphot_over_views)) + 1 is equivalent to
+        # ranking views_over_nphot)
+        nphot_over_views = [c.n_photos / c.avg_views
+                            for key, c in self.clusters.items()]
+        cluster_order = list(np.argsort(np.argsort(nphot_over_views)) + 1)
+        for i, (key, cluster) in enumerate(self.clusters.items()):
+            cluster.rank = cluster_order[i]
 
-    def populate_clusters(self, centroids):
-        self.clusters = []
-        for i in range(len(centroids)):
-            c_cluster = self.table[self.table['cluster'] == i]
+    def populate_clusters(self, ids, centroids):
+        self.clusters = {}
+        for i in range(len(ids)):
+            c_cluster = self.table[self.table['cluster'] == ids[i]]
             c_n_photos = c_cluster.shape[0]
             c_n_centroid = centroids[i]
             ############## TO DO: Mean or median??? ##################
@@ -156,7 +161,7 @@ class ClusterInfo:
             c_n_avg_views = c_cluster['views'].median()
             c_n_best_photos = c_cluster.sort_values(
                 'views', ascending=False).iloc[:5, :]
-            self.clusters.append(
+            self.clusters[ids[i]] = (
                 Cluster(c_n_photos, c_n_centroid, c_n_avg_views,
                         c_n_best_photos))
 
@@ -248,17 +253,16 @@ class ClusterInfo:
 
     def get_cluster_infographic(self, i):
         cluster = self.clusters[i]
-        cluster_name = self.cluster_order[i]
 
         carousel_elements = ""
-        for i, (ind, row) in enumerate(cluster.best_photos.iterrows()):
-            if i == 0:
+        for ib, (ind, row) in enumerate(cluster.best_photos.iterrows()):
+            if ib == 0:
                 carousel_elements += self.get_carousel(row, first=True) + "\n"
             else:
                 carousel_elements += self.get_carousel(row) + "\n"
 
         popup_html = best_photo_html_tail.format(
-            name=cluster_name,
+            rank=cluster.rank,
             long="{0:.7f}".format(cluster.centroid[0]),
             lat="{0:.7f}".format(cluster.centroid[1]),
             n_photos=cluster.n_photos,
@@ -268,7 +272,7 @@ class ClusterInfo:
         return cluster.centroid, best_photo_html_head + '\n' + popup_html
 
 
-def make_map(results, results_background, cluster_info, default_longlat):
+def make_map(results, cluster_info, default_longlat):
 
     map_TO = folium.Map(location=(default_longlat.latitude,
                                   default_longlat.longitude),
@@ -276,25 +280,17 @@ def make_map(results, results_background, cluster_info, default_longlat):
                         tiles='cartodbpositron',
                         width='100%', height='100%')
 
-    # Plot all photos retrieved.
-    for (ind, row) in results_background.iterrows():
-        folium.CircleMarker((row['latitude'], row['longitude']),
-                            radius=0.5, color="#aaa",
-                            fill_color="#aaa").add_to(map_TO)
-
-    # Plot clusters.
     results['color'] = [cluster_info.get_cluster_color(item)
                         for item in results['cluster'].values]
     for (ind, row) in results.iterrows():
         folium.CircleMarker((row['latitude'], row['longitude']),
-                            popup=make_photo_popup(row,
-                                                   cluster_info.cluster_order),
+                            popup=make_photo_popup(row, cluster_info),
                             radius=(1 if row['cluster'] < 0 else 2),
                             color=row['color'],
                             fill_color=row['color']).add_to(map_TO)
 
     # Plot best photo in each cluster.
-    for i in range(len(cluster_info.clusters)):
+    for i in cluster_info.clusters.keys():
         centroid, popup_html = cluster_info.get_cluster_infographic(i)
         iframe = branca.element.IFrame(html=popup_html, width=300, height=560)
         popup = folium.Popup(iframe, max_width=300)
