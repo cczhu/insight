@@ -2,12 +2,34 @@
 {% set active_page = "about" %}
 
 {% block content %}
-    <div class="container">
+<div class="container">
 
-       <div class="starter-template">
-           <h2>About</h2>
-           <p>This is a page about my project.</p>
-       </div>
+<div class="aboutcontainer col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+<h1>How to Use SnapAssist</h1>
+<p>To search for photography locations for the subject matter of your choice, type
+your keywords into the box.  SnapAssist will then perform a keyword search to find the
+relevant photos in its database, cluster the photos using their geolocations, and
+plot the photos and clusters on a map.</p>
 
-     </div> <!-- /.container-->
+<center>
+<p><img class="aboutimage" src="{{ url_for('static', filename='images/clustersummary.png') }}" title="SnapAssist pin example." /></p>
+</center>
+
+<p>On the map, the centre of each cluster is denoted with a blue pin. Clicking the
+pin expands it to give summary statistics and representative photos (and their
+EXIF data).  The cluster's longitude and latitude are determined by averaging
+the long-lat of the cluster's photos, weighted by the number of views each photo has.
+The cluster's rank (#1, above) is determined by ordering the clusters' average number of
+views per photo divided by the number of photos in the cluster (a joint measure of the
+quality of the photos taken at a location and how original the location is).</p>
+
+<h1>How SnapAssist Works</h1>
+
+<p>For information on how SnapAssist works, and how to deploy it, please see its
+<a href='https://github.com/cczhu/snapassist'>GitHub page</a>.</p>
+
+<p>SnapAssist was created by <a href='https://cczhu.github.io/'>Chenchong Charles Zhu</a>
+as part of the Fall 2018 Insight Data Science fellowship in Toronto.</p>
+
+ </div> <!-- /.container-->
 {% endblock %}
