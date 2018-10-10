@@ -16,7 +16,7 @@ def make_flickr_link(row):
 
 
 def make_photo_popup(row, cluster_info):
-    popup_html = ('Cluster #{cluster}<br>'
+    popup_html = ('Cluster {cluster}<br>'
                   '<a href="{link}" target="_blank">'
                   '<img border="0" src="{url}"></a>').format(
         link=make_flickr_link(row), url=row['url_s'],

@@ -173,3 +173,12 @@ h3 {
   outline: 0;
   background-color: #ffe330;
 }
+
+.aboutcontainer {
+  padding: 30px 0;
+}
+
+.aboutimage {
+  padding: 20px 0;
+  width: 600px;
+}
