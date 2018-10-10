@@ -136,6 +136,7 @@ showing the process:
 
 .. image:: https://dashee87.github.io/images/DBSCAN_tutorial.gif
     :alt: DBSCAN GIF by dashee
+    :align: "center"
 
 DBSCAN works well for clustering on a background of uniform density, but not for
 one where the density changes, which is frequently the case for SnapAssist. 
