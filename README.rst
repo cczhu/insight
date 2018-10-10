@@ -1,6 +1,6 @@
-==========
+**********
 SnapAssist
-==========
+**********
 
 Welcome to the repository for SnapAssist, the web application for perfect
 picture planning!  SnapAssist leverages geotagged photo metadata scraped from
@@ -8,6 +8,9 @@ the `Flickr <https://www.flickr.com/>`_ alongside density-based clustering to
 determine the most popular photography viewpoints around the Greater Toronto
 area.  The app is currently served (using AWS) at
 `snapassist.site <https://snapassist.site/>`_.
+
+Getting Started
+===============
 
 Requirements
 ------------
@@ -27,6 +30,9 @@ requires the following packages::
     tables
     scikit-learn
 
+Deploying SnapAssist
+--------------------
+
 Scikit-learn's `OPTICS module
 <http://scikit-learn.org/dev/modules/generated/sklearn.cluster.OPTICS.html>`_ is
 currently not available through pip-install, so its code has been included under
@@ -39,6 +45,22 @@ module by running::
 in the SnapAssist root folder.
 
 This module will become deprecated when scikit-learn 0.21 is released.
+
+Constructing Databases
+----------------------
+
+The scrapers assume your Python environment have API keys:
+
+* ``FLICKR_API_KEY`` - Flickr API key
+* ``FLICKR_API_SECRET`` - Flickr API secret
+
+within a module that can be imported with ``import secrets``.  I recommend
+running the code in a virtualenv, and adding a ``secrets.py`` file in a folder
+included in the virtualenv's path (see `adding .pth files
+<https://docs.python.org/3/install/index.html#modifying-python-s-search-path>`_).
+
+Running the WebApp
+------------------
 
 In addition, you must possess two pandas HDF5 databases produced by the Flickr
 scrapers associated with SnapAssist (found under the ``scrapers`` folder)
@@ -57,8 +79,12 @@ variable indicating the path to the tables' folder::
 
 To create the the tables, please see the files in the `scrapers` folder.
 
+How Does SnapAssist Work?
+=========================
+
+
 Credits
--------
+=======
 
 This package was created by Chenchong Charles Zhu as part of the Insight Data
 Science fellowship.

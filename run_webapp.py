@@ -1,5 +1,5 @@
 #!/usr/bin/env python
 
-from snapassist import app
+from snapassist.webapp import app
 
 app.run(debug=True)

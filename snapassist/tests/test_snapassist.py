@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `insight` package."""
+"""Tests for `snapassist` package."""
 
 import pytest
 
-
-from insight import insight
+from .. import database
 
 
 @pytest.fixture

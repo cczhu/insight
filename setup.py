@@ -44,7 +44,7 @@ setup(
     name='snapassist',
     packages=find_packages(include=['snapassist']),
     setup_requires=setup_requirements,
-    test_suite='tests',
+    test_suite='snapassist/tests',
     tests_require=test_requirements,
     url='https://github.com/cczhu/snapassist',
     version='0.1.0',
