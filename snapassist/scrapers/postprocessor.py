@@ -6,6 +6,46 @@ import unidecode as ud
 import re
 
 
+def combine_master_tables(raw_master_table, outname):
+    tables = pd.HDFStore(raw_master_table, 'r')
+    bigtable = tables['table0']
+    for i in range(1, len(tables.keys())):
+        bigtable = bigtable.append(tables['table{i}'.format(i=i)])
+        bigtable.reset_index(drop=True, inplace=True)
+    tables.close()
+    bigtable.drop_duplicates(subset='id', keep='first', inplace=True)
+    bigtable.to_hdf(outname, 'table')
+
+
+def get_popular_table(mtab):
+    mtab['views'] = mtab['views'].astype(int)
+    return mtab.loc[
+        mtab['views'] > np.percentile(mtab['views'], 75), :].copy()
+
+
+def combine_exif_tables(raw_exif_table_name, poptab, outname):
+    tables = pd.HDFStore(raw_exif_table_name, 'r')
+    bigtable = tables['table0']
+    for i in range(1, len(tables.keys())):
+        bigtable = bigtable.append(tables['table{i}'.format(i=i)])
+        bigtable.reset_index(drop=True, inplace=True)
+    tables.close()
+    bigtable.drop_duplicates(subset='id', keep='first', inplace=True)
+
+    # Reset the big table's index to be that of poptab.
+    bigtable.set_index(poptab.index, inplace=True)
+
+    # Join popular and EXIF tables on index, then double-check IDs.
+    poptab = poptab.join(bigtable, how='left', rsuffix='_exif')
+    has_id_exif = poptab['id_exif'].notnull()
+    assert np.all((poptab.loc[has_id_exif, 'id'] ==
+                   poptab.loc[has_id_exif, 'id_exif'])), (
+        "id mismatch between EXIF and popular photos datasets!")
+
+    poptab.drop(columns='id_exif', inplace=True)
+    poptab.to_hdf(outname, 'table')
+
+
 def clean_title(raw_title):
     """Clean photo title to get a command-line friendly name."""
     title_cleaned = ud.unidecode(raw_title.strip())
@@ -21,27 +61,15 @@ def extract_times(results):
 
 
 def read_and_preprocess_tables(
-        table_folder='/home/cczhu/InsightData/flickr_meta/',
+        table_folder='./',
         master_table='master_table.hdf5',
-        popular_table='master_table_popular.hdf5',
-        popular_exif='master_table_popular_exif.hdf5',
-        savepath='/home/cczhu/InsightData/flickr_meta_processed/',
+        popular_table='popular_table.hdf5',
         master_table_processed='master_table_processed.hdf5',
         popular_table_processed='popular_table_processed.hdf5'):
 
     # Read tables.
     mtab = pd.read_hdf(table_folder + master_table, 'table')
     poptab = pd.read_hdf(table_folder + popular_table, 'table')
-    popexif = pd.read_hdf(table_folder + popular_exif, 'table')
-
-    # Join popular and EXIF tables on index, then double-check IDs.
-    poptab = poptab.join(popexif, how='left', rsuffix='_exif')
-    has_id_exif = poptab['id_exif'].notnull()
-    assert np.all((poptab.loc[has_id_exif, 'id'] ==
-                   poptab.loc[has_id_exif, 'id_exif'])), (
-        "id mismatch between EXIF and popular photos datasets!")
-
-    poptab.drop(columns='id_exif', inplace=True)
 
     # Basic preprocessing.
     mtab['views'] = mtab['views'].astype(int)
@@ -52,5 +80,5 @@ def read_and_preprocess_tables(
     extract_times(mtab)
     extract_times(poptab)
 
-    mtab.to_hdf(savepath + master_table_processed, 'table')
-    poptab.to_hdf(savepath + popular_table_processed, 'table')
+    mtab.to_hdf(table_folder + master_table_processed, 'table')
+    poptab.to_hdf(table_folder + popular_table_processed, 'table')

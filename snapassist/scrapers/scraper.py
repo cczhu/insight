@@ -10,9 +10,6 @@ import time
 import pandas as pd
 
 
-##### PARSERS #####
-
-
 general_metadata_parser = (
     ('id', (str, 'N/A')),
     ('owner', (str, 'N/A')),
@@ -129,10 +126,22 @@ exif_parser_default = OrderedDict((('Camera', 'N/A'),
 exif_parser_default_keys = tuple(exif_parser_default.keys())
 
 
-##### GENERAL SCRAPER #####
-
-
 class FlickrScraper:
+    """Photo metadata scraper using `flickrapi.FlickrAPI.walk`.
+
+    Parameters
+    ----------
+    api_key : str
+        Flickr site API key.
+    api_secret : str
+        Flickr site API secret.
+    max_count : int, optional
+        Maximum number of photos to return per search.  Default: 3000, but
+        should be kept to below 4000 to prevent the Flickr API from returning
+        repeated values.
+    verbose : bool, optional
+        Print to screen any exceptions encountered while scraping.
+    """
 
     def __init__(self, api_key, api_secret, max_count=3000, verbose=True):
         self.flickr = flickrapi.FlickrAPI(api_key, api_secret)
@@ -168,79 +177,123 @@ class FlickrScraper:
         return data
 
 
-##### DETAILED SCRAPERS #####
+class FlickrDetailedScraper:
+    """Detailed metadata scraper using `flickrapi.FlickrAPI.photos.getInfo`.
 
+    This function cycles through the general metadata data frame created by
+    `FlickrScraper` and returns tables with further details of each photo, such
+    as detailed photo descriptions, or EXIF data.
 
-def get_exif(exif_data):
+    Parameters
+    ----------
+    api_key : str
+        Flickr site API key.
+    api_secret : str
+        Flickr site API secret.
+    verbose : bool, optional
+        Print to screen any exceptions encountered while scraping.
+    """
 
-    found_tags = exif_parser_default.copy()
-    if len(exif_data.keys()):
-        if 'camera' in exif_data['photo'].keys():
-            found_tags['Camera'] = exif_data['photo']['camera']
+    def __init__(self, api_key, api_secret, verbose=True):
 
-        exif_data_body = exif_data['photo']['exif']
+        self.flickrjson = flickrapi.FlickrAPI(api_key, api_secret,
+                                              format='parsed-json')
+        self.verbose = bool(verbose)
 
-        for item in exif_data_body:
-            itemtag = item['tag']
-            if itemtag in exif_parser_keys:
-                try:
-                    found_tags[itemtag] = exif_parser[itemtag](
-                        item['raw']['_content'])
-                except Exception:
-                    pass
+    def _get_exif(self, exif_data):
 
-    return tuple(found_tags.values())
+        found_tags = exif_parser_default.copy()
+        if len(exif_data.keys()):
+            if 'camera' in exif_data['photo'].keys():
+                found_tags['Camera'] = exif_data['photo']['camera']
 
+            exif_data_body = exif_data['photo']['exif']
 
-def get_photo_details(general_df, api_key, api_secret, tsleep=1,
-                      verbose=False):
+            for item in exif_data_body:
+                itemtag = item['tag']
+                if itemtag in exif_parser_keys:
+                    try:
+                        found_tags[itemtag] = exif_parser[itemtag](
+                            item['raw']['_content'])
+                    except Exception:
+                        pass
 
-    photos_data = []
-    flickrjson = flickrapi.FlickrAPI(api_key, api_secret, format='parsed-json')
+        return tuple(found_tags.values())
 
-    for i, (ind, row) in enumerate(general_df.iterrows()):
+    def get_photo_details(self, general_df, tsleep=1.):
+        """Retrieve comments and descriptions of general metadata entries.
 
-        if verbose:
-            print(i)
+        Because scraping must be done photo-by-photo, must be slowed down by
+        pausing between API queries to prevent exceeding the query limit per
+        hour of 3600.
 
-        time.sleep(tsleep)
+        Parameters
+        ----------
+        general_df : pandas.DataFrame
+            General metadata data frame.
+        tsleep : float, optional
+            Number of seconds to wait between scraping to prevent exceeding the
+            Flickr API query limit (3600 times / hour).
+        verbose : bool, optional
+            If True (default), prints current status and any exceptions.
+        """
+        photos_data = []
 
-        try:
-            cphotodata = flickrjson.photos.getInfo(photo_id=row['id'])
-            cphotodata_processed = tuple(
-                parser(cphotodata['photo'][key])
-                for key, parser in photodetails_parser)
-            photos_data.append((row['id'],) + cphotodata_processed)
-        except Exception as exc:
-            if verbose:
-                print("Exception '{0}' raised when parsing photo with id {1}"
-                      .format(str(exc), row['id']))
+        for i, (ind, row) in enumerate(general_df.iterrows()):
 
-    return pd.DataFrame(photos_data, columns=(('id',) + photodetails_keys))
+            if self.verbose:
+                print("Working on photo", i)
 
+            time.sleep(tsleep)
 
-def get_exif_data(general_df, api_key, api_secret, tsleep=1, verbose=False):
+            try:
+                cphotodata = self.flickrjson.photos.getInfo(photo_id=row['id'])
+                cphotodata_processed = tuple(
+                    parser(cphotodata['photo'][key])
+                    for key, parser in photodetails_parser)
+                photos_data.append((row['id'],) + cphotodata_processed)
+            except Exception as exc:
+                if self.verbose:
+                    print("Exception '{0}' raised when parsing photo "
+                          "with id {1}".format(str(exc), row['id']))
 
-    exif_data = []
-    exif_index = []
-    flickrjson = flickrapi.FlickrAPI(api_key, api_secret, format='parsed-json')
+        return pd.DataFrame(photos_data, columns=(('id',) + photodetails_keys))
 
-    for i, (ind, row) in enumerate(general_df.iterrows()):
+    def get_exif_data(self, general_df, tsleep=1.):
+        """Retrieve comments and descriptions of general metadata entries.
 
-        if verbose:
-            print(i)
+        Because scraping must be done photo-by-photo, must be slowed down by
+        pausing between API queries to prevent exceeding the query limit per
+        hour of 3600.
 
-        time.sleep(tsleep)
+        Parameters
+        ----------
+        general_df : pandas.DataFrame
+            General metadata data frame.
+        tsleep : float, optional
+            Number of seconds to wait between scraping to prevent exceeding the
+            Flickr API query limit (3600 times / hour).
+        """
 
-        try:
-            cphotexif = flickrjson.photos.getExif(photo_id=row['id'])
-            cphotexif_processed = get_exif(cphotexif)
-            exif_data.append((row['id'],) + cphotexif_processed)
-            exif_index.append(ind)
-        except Exception as exc:
-            if verbose:
-                print("Exception '{0}' raised when parsing photo with id {1}"
-                      .format(str(exc), row['id']))
+        exif_data = []
+        exif_index = []
 
-    return pd.DataFrame(exif_data, index=exif_index,
-                        columns=(('id',) + exif_parser_default_keys))
+        for i, (ind, row) in enumerate(general_df.iterrows()):
+
+            if self.verbose:
+                print("Working on photo", i)
+
+            time.sleep(tsleep)
+
+            try:
+                cphotexif = self.flickrjson.photos.getExif(photo_id=row['id'])
+                cphotexif_processed = self._get_exif(cphotexif)
+                exif_data.append((row['id'],) + cphotexif_processed)
+                exif_index.append(ind)
+            except Exception as exc:
+                if self.verbose:
+                    print("Exception '{0}' raised when parsing photo "
+                          "with id {1}".format(str(exc), row['id']))
+
+        return pd.DataFrame(exif_data, index=exif_index,
+                            columns=(('id',) + exif_parser_default_keys))
