@@ -4,8 +4,8 @@ from . import app
 from . import db
 from . import (toronto_longlat, global_min_samples, master_sigma_cut,
                global_max_eps_scaling)
-from . import clustering
-from . import mapping
+from .. import clustering
+from .. import mapping
 
 
 bad_css = (r'    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/'
