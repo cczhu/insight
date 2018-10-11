@@ -8,15 +8,88 @@ the `Flickr <https://www.flickr.com/>`_ to determine the most popular
 photography viewpoints around the Greater Toronto area.  The app is currently
 served (using AWS) at `snapassist.site <https://snapassist.site/>`_.
 
-The SnapAssist repo consists of two components: a set of scrapers to data mine
-Flickr using its API and dump the results into a set of pandas data frames 
-(stored as HDF5), and a web application that performs the mapping.  The web
-application reads these tables in and performs keyword searching to retrieve
-relevant photos.  It then clusters the relevant photos' geolocations to
-determine regions where many people have taken pictures, and calculates summary
-statistics for each cluster.  Finally, the photos' locations and cluster
-summaries are displayed on an interactive map.  For more information about each,
-please see the sections below!
+SnapAssist was created by Chenchong Charles Zhu as part of the Fall 2018 Insight
+Data Science fellowship in Toronto.  Its slide deck can be found `on Google
+Sheets <https://docs.google.com/presentation/d/11VtybSmFE8JAhgzYWqHsEF3rQIJM2WrswvEkWE5E3Io/edit?usp=sharing>`_.
+
+How Does SnapAssist Work?
+=========================
+
+SnapAssist consists of two components: a set of scrapers to data mine
+Flickr using its API and dump the cleaned results into a set of pandas data
+frames (stored as HDF5), and a web application that performs the mapping.  More
+information about the scrapers can be found in the Data Mining Flickr section.
+
+In the web app, when a user enters a search term, the app performs a search for
+the corresponding tags in the pandas tables[1]_.  Once the relevant photos are
+found, their geolocations are passed to the OPTICS clustering algorithm 
+(taken from the development version of scikit-learn) to determine high-density
+clusters of photos.  For each cluster, the app calculates the number of photos,
+average number of views per photo, and a cluster centre defined by the
+popularity-weighted mean longitude and latitude of the cluster's photos.  The
+clusters are ranked by the quantity::
+
+    avg. views / number of photos
+
+which is a joint measure of the quality of the photos taken within a cluster and
+how undersubscribed a cluster's location is (ideally, photographers want to
+discover great shooting locations that aren't too popular!). Finally, all photos
+and clusters are plotted on a map of Toronto using Leaflet.js through Folium.
+
+SnapAssist uses clustering to find and characterize popular photo locations. 
+This translates to finding clusters of higher density against a background of
+lower density, which is a task for density-based algorithms like
+`DBSCAN <http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html>`_.
+
+DBSCAN determines clusters by picking a point from the data and determining
+whether there are more than the minimum number of neighbouring points within a
+radius ``epsilon``.  If so, the point is considered a core member of its
+cluster.  It then performs the same check for all of the neighbouring points. 
+This continues until no more points can be reached.  Points without enough
+neighbours are considered background noise.  Here's a great animation from
+`David Sheehan <https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/>`_
+showing the process:
+
+.. image:: https://dashee87.github.io/images/DBSCAN_tutorial.gif
+    :alt: DBSCAN GIF by dashee
+    :align: center
+
+DBSCAN works well for clustering on a background of uniform density, but not for
+one where the density changes.  This is because when the user sets the values of
+``epsilon`` and minimum number of points, they effectively set a critical
+density above which points will cluster.  In many situations for SnapAssist, the
+density of photos decreases with distance away from the Toronto downtown core,
+but clusters of photos exist in regions of both high and low density.  For
+example, here are the locations of photos of the CN Tower clustered using DBSCAN
+(clusters are represented by coloured points, background by grey points) using
+a small ``epsilon`` (left) and a large ``epsilon`` (right):
+
+.. image:: docs/db_combined.png
+   :align: center
+
+Using too small an ``epsilon`` results in clustering near downtown Toronto and
+the Toronto Islands, but not further out, while using too large an ``epsilon``
+results in all of downtown Toronto forming one cluster.
+
+To rectify this, SnapAssist uses the `OPTICS algorithm
+<http://scikit-learn.org/dev/modules/clustering.html#optics>`_, which replaces
+checking for neighbours within a fixed ``epsilon`` with creating a
+"reachability graph" that encodes how far each point is from its nearest
+neighbours.  Clusters are determined by finding local minima in reachability,
+then moving outward until the increase in reachability moving from one point to
+the next becomes too high.
+
+Here's the OPTICS clustering for the same photos from above; OPTICS picks out
+clusters both in downtown Toronto and in the suburbs.
+
+.. image:: docs/optcl.png
+   :align: center
+
+.. [1] Currently, exact keyword matching is used (with some intelligent
+   handling of white space.  I had considered creating an embedded space of tags
+   and using semantic similarity, but there is no obvious way to set a critical
+   similarity beyond which two photos are considered different.  Without this,
+   there is no natural boundary for the number of photos to return to the user.
 
 Requirements
 ============
@@ -60,13 +133,14 @@ All the scrapers require `Flickr API keys
 manually passed to the scraper, or stored in a ``secrets.py`` file that
 contains the following::
 
-    # Flickr API key.
-    FLICKR_API_KEY = '<YOUR API KEY HERE>'
-    FLICKR_API_SECRET = '<YOUR API SECRET HERE'
+    >>> # Flickr API key.
+    >>> FLICKR_API_KEY = '<YOUR API KEY HERE>'
+    >>> FLICKR_API_SECRET = '<YOUR API SECRET HERE'
 
-The scrapers will attempt to ``import secrets``, so include the path to your
-file in your Python PATH.  I recommend running SnapAssist in a virtualenv, and
-adding a ``secrets.py`` file in a folder included in the virtualenv's path (see
+If the keys are not manually passed, the scraper scripts will automatically
+attempt to ``import secrets``, so include the path to your ``secrets.py`` in
+your Python path.  I recommend running SnapAssist in a virtualenv, and adding a
+.pth file to include ``secrets.py`` (see
 `adding .pth files <https://docs.python.org/3/install/index.html#modifying-python-s-search-path>`_).
 
 The overall scraping workflow (with generic table names) is
@@ -76,84 +150,34 @@ The overall scraping workflow (with generic table names) is
       python run_scraper_1_general.py <START_DATE> <END_DATE> 'master_table.hdf5'-v
 
 2. Run the EXIF scraper.  Here, ``DIVISIONS`` is the number of blocks to
-   subdivide the 25% most popular photos in master table into, to avoid losing
-   all the data already scrapedif an exception is raised in the script; a
+   subdivide the 25% most popular photos in the master table into, to avoid
+   losing all the data already scraped if the script raises an exception; a
    reasonable number is 10::
 
       python run_scraper_2_exif.py 'master_table.hdf5' <DIVISIONS> 'popular_table.hdf5'
 
 3. In the Python interpreter of your choice, run::
 
-      from snapassist.scrapers import postprocessor as ppc
-      read_and_preprocess_tables(
-        table_folder='./',
-        master_table='master_table.hdf5',
-        popular_table='popular_table.hdf5',
-        master_table_processed='master_table_processed.hdf5',
-        popular_table_processed='popular_table_processed.hdf5')
+      >>> from snapassist.scrapers import postprocessor as ppc
+      >>> read_and_preprocess_tables(
+      ...     table_folder='./',
+      ...     master_table='master_table.hdf5',
+      ...     popular_table='popular_table.hdf5',
+      ...     master_table_processed='master_table_processed.hdf5',
+      ...     popular_table_processed='popular_table_processed.hdf5')
 
-The SnapAssist Web Application
-==============================
+Deploying the Web App
+=====================
 
-With databases in hand, we can now run the web app.  The app loads the pandas
-tables on launch.  When a user enters a keyword query, the app performs a tag
-search of the query on the tables[#]_.  The matching photos' geolocations are
-then passed to the OPTICS clustering algorithm (taken from the development
-version of scikit-learn) to determine high-density clusters of photos.  For each
-cluster, the app calculates the number of photos, average number of views per
-photo, and a cluster center defined by the popularity-weighted mean longitude
-and latitude of the cluster's photos.  The clusters are ranked by their average
-views to photo number ratio::
-
-    R = avg. views / number of photos
-
-which is a joint measure of the quality of the photos taken at a location and
-how original the location is.  Finally, all photos and clusters are plotted on a
-map of Toronto using Leaflet.js through Folium.
-
-.. [#] Currently, exact keyword matching is used (with some intelligent
-   handling of white space.  I had considered creating an embedded space of tags
-   and using semantic similarity, but there is no obvious way to set a critical
-   similarity beyond which two photos are considered different.  Without this,
-   there is no natural boundary for the number of photos to return to the user.
-
-OPTICS
-------
-
-SnapAssist uses clustering in geolocation to find and characterize popular
-photo locations.  This translates to finding clusters of high density against a
-background of lower density, which is a task for density-based algorithms like
-`DBSCAN <http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html>`_.
-
-DBSCAN determines clusters by picking a point from the data and determining
-whether there are more than the minimum number of neighbouring points within a
-radius :math:`\epsilon`.  If so, the point is considered a core member of its
-cluster.  It then performs the same check for all of the neighbouring points. 
-This continues until no more points can be walked to.  Points without enough
-neighbours are considered background noise.  Here's a great animation from
-`David Sheehan <https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/>`_
-showing the process:
-
-.. image:: https://dashee87.github.io/images/DBSCAN_tutorial.gif
-    :alt: DBSCAN GIF by dashee
-    :align: center
-
-DBSCAN works well for clustering on a background of uniform density, but not for
-one where the density changes, which is frequently the case for SnapAssist. 
-This is why it uses the `OPTICS algorithm
-<http://scikit-learn.org/dev/modules/clustering.html#optics>`_, which replaces
-checking for neighbours within a fixed :math:`\epsilon` with creating a
-"reachability graph" that encodes how far each point is from its nearest
-neighbours.  Clusters are determined by finding local minima in reachability,
-then moving outward until the increase in reachability moving from one point to
-the next becomes too high.
+Building OPTICS
+---------------
 
 Scikit-learn's `OPTICS module
-<http://scikit-learn.org/dev/modules/generated/sklearn.cluster.OPTICS.html>`_ is
-currently not available through pip-install, so its code has been included under
-``snapassist/sklearn_optics/``.  OPTICS requires `Cython <http://cython.org/>`_ 
-(which has C package dependencies).  Once installed, build the ``_optics_inner``
-module by running::
+<http://scikit-learn.org/dev/modules/generated/sklearn.cluster.OPTICS.html>`_
+has not yet been released, so its code has been included under
+``snapassist/sklearn_optics/``.  OPTICS needs to be built using `Cython
+<http://cython.org/>`_ (which has C package dependencies); you can do this by
+running::
 
     python setup.py build_ext --inplace
 
@@ -161,15 +185,18 @@ in the SnapAssist root folder.
 
 This module will become deprecated when scikit-learn 0.21 is released.
 
-Running the Web App
--------------------
+Linking the Databases
+---------------------
 
 Before running the web app, you must tell SnapAssist where your tables are by
 setting the environmental variable::
 
     export FLICKR_TABLES_FOLDER='/PATH/TO/YOUR/FOLDER/'
 
-To run the app locally, use the ``run_webapp.py`` script.  On a server, we
+Running the Web App
+-------------------
+
+To run the app locally, use the ``run_webapp.py`` script.  On a server, I
 recommend using `gunicorn <https://gunicorn.org/>` server, which is launched
 using the command::
 
@@ -180,9 +207,6 @@ Python PATH.
 
 Credits
 =======
-
-This package was created by Chenchong Charles Zhu as part of the Insight Data
-Science fellowship.
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
