@@ -10,7 +10,7 @@ served (using AWS) at `snapassist.site <https://snapassist.site/>`_.
 
 SnapAssist was created by Chenchong Charles Zhu as part of the Fall 2018 Insight
 Data Science fellowship in Toronto.  Its slide deck can be found `on Google
-Sheets <https://docs.google.com/presentation/d/11VtybSmFE8JAhgzYWqHsEF3rQIJM2WrswvEkWE5E3Io/edit?usp=sharing>`_.
+Sheets <https://docs.google.com/presentation/d/e/2PACX-1vQ2RDVBLChQwYHi1sYkdt9C8GYaz_XgVf3pqRPMOaYelgxgiYI4bzF6J7jqG_l9b0Umj-JXdjoZF-VG/pub?start=false&loop=false&delayms=60000>`_.
 
 How Does SnapAssist Work?
 =========================
@@ -73,11 +73,16 @@ results in all of downtown Toronto forming one cluster.
 
 To rectify this, SnapAssist uses the `OPTICS algorithm
 <http://scikit-learn.org/dev/modules/clustering.html#optics>`_, which replaces
-checking for neighbours within a fixed ``epsilon`` with creating a
-"reachability graph" that encodes how far each point is from its nearest
-neighbours.  Clusters are determined by finding local minima in reachability,
-then moving outward until the increase in reachability moving from one point to
-the next becomes too high.
+checking for neighbours within a fixed ``epsilon`` with a hierarchical
+clustering algorithm that orders points by the minimum ``epsilon`` required to
+reach their nearest neighbours.  The ordering and minimum ``epsilon`` can be
+combined to create a dendrogram-like "reachability plot".  Cutting at any
+particular ``epsilon`` in this plot is equivalent to clustering using DBSCAN
+with the same ``epsilon``, but clusters can also be assigned by finding local
+minima in reachability, then moving outward until the increase in reachability
+moving from one point to the next becomes too high.  This latter method extracs
+clusters from a background of **varying density**, exactly what we need to
+cluster photos.
 
 Here's the OPTICS clustering for the same photos from above; OPTICS picks out
 clusters both in downtown Toronto and in the suburbs.
