@@ -91,10 +91,11 @@ clusters both in downtown Toronto and in the suburbs.
    :align: center
 
 .. [1] Currently, exact keyword matching is used (with some intelligent
-   handling of white space.  I had considered creating an embedded space of tags
-   and using semantic similarity, but there is no obvious way to set a critical
-   similarity beyond which two photos are considered different.  Without this,
-   there is no natural boundary for the number of photos to return to the user.
+   handling of white space).  I had considered creating an embedded space of
+   tags and using semantic similarity, but there is no obvious way to set a
+   critical similarity beyond which two photos are considered different.
+   Without this, there is no natural boundary for the number of photos to
+   return to the user.
 
 Requirements
 ============
@@ -202,7 +203,7 @@ Running the Web App
 -------------------
 
 To run the app locally, use the ``run_webapp.py`` script.  On a server, I
-recommend using `gunicorn <https://gunicorn.org/>` server, which is launched
+recommend using `gunicorn <https://gunicorn.org/>`_ server, which is launched
 using the command::
 
     gunicorn snapassist.web::app
