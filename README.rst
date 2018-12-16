@@ -5,12 +5,13 @@ SnapAssist
 Welcome to the repository for SnapAssist, the web application for perfect
 picture planning!  SnapAssist leverages geotagged photo metadata scraped from
 the `Flickr <https://www.flickr.com/>`_ to determine the most popular
-photography viewpoints around the Greater Toronto area.  The app is currently
-served (using AWS) at `snapassist.site <https://snapassist.site/>`_.
+photography viewpoints around the Greater Toronto area for any given subject
+matter. The app is currently served (using Amazon AWS) at `snapassist.site
+<https://snapassist.site/>`_.
 
 SnapAssist was created by Chenchong Charles Zhu as part of the Fall 2018 Insight
-Data Science fellowship in Toronto.  Its slide deck can be found `on Google
-Sheets <https://docs.google.com/presentation/d/e/2PACX-1vQ2RDVBLChQwYHi1sYkdt9C8GYaz_XgVf3pqRPMOaYelgxgiYI4bzF6J7jqG_l9b0Umj-JXdjoZF-VG/pub?start=false&loop=false&delayms=60000>`_.
+Data Science fellowship in Toronto.  Its companion presentation can be found on
+`Youtube <https://youtu.be/UKqM4mM3-Mw>`_.
 
 How Does SnapAssist Work?
 =========================
@@ -26,26 +27,27 @@ found, their geolocations are passed to the OPTICS clustering algorithm
 (taken from the development version of scikit-learn) to determine high-density
 clusters of photos.  For each cluster, the app calculates the number of photos,
 average number of views per photo, and a cluster centre defined by the
-popularity-weighted mean longitude and latitude of the cluster's photos.  The
+views-weighted mean longitude and latitude of the cluster's photos.  The
 clusters are ranked by the quantity::
 
-    avg. views / number of photos
+    avg. views per photo in cluster / number of photos in cluster
 
 which is a joint measure of the quality of the photos taken within a cluster and
 how undersubscribed a cluster's location is (ideally, photographers want to
 discover great shooting locations that aren't too popular!). Finally, all photos
-and clusters are plotted on a map of Toronto using Leaflet.js through Folium.
+and clusters are plotted on a map of Toronto using Folium (which useds
+Leaflet.js in the backend).
 
-SnapAssist uses clustering to find and characterize popular photo locations. 
-This translates to finding clusters of higher density against a background of
-lower density, which is a task for density-based algorithms like
+SnapAssist uses geospatial clustering to find and characterize popular photo
+locations.  This translates to finding clusters of higher density against a
+background of lower density, which is a task for density-based algorithms like
 `DBSCAN <http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html>`_.
 
 DBSCAN determines clusters by picking a point from the data and determining
 whether there are more than the minimum number of neighbouring points within a
 radius ``epsilon``.  If so, the point is considered a core member of its
-cluster.  It then performs the same check for all of the neighbouring points. 
-This continues until no more points can be reached.  Points without enough
+cluster.  It then performs the same check for all of the neighbouring points,
+and this continues until no more points can be reached.  Points without enough
 neighbours are considered background noise.  Here's a great animation from
 `David Sheehan <https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/>`_
 showing the process:
@@ -155,14 +157,16 @@ The overall scraping workflow (with generic table names) is
 
       python run_scraper_1_general.py <START_DATE> <END_DATE> 'master_table.hdf5'-v
 
-2. Run the EXIF scraper.  Here, ``DIVISIONS`` is the number of blocks to
-   subdivide the 25% most popular photos in the master table into, to avoid
-   losing all the data already scraped if the script raises an exception; a
-   reasonable number is 10::
+2. Run the EXIF scraper, which retrieves camera settings metadata for the 25%
+   most popular photos found with the general scraper. Here, ``DIVISIONS`` is
+   the number of blocks to subdivide the photos into, to avoid losing all the
+   data already scraped by the EXIF scraper if it raises an exception.  A
+   reasonable number for ``DIVISIONS`` is 10::
 
       python run_scraper_2_exif.py 'master_table.hdf5' <DIVISIONS> 'popular_table.hdf5'
 
-3. In the Python interpreter of your choice, run::
+3. In the Python interpreter of your choice, run the following to process the
+   scraped data into pandas HDF5 tables usable by SnapAssist::
 
       >>> from snapassist.scrapers import postprocessor as ppc
       >>> read_and_preprocess_tables(
@@ -194,22 +198,22 @@ This module will become deprecated when scikit-learn 0.21 is released.
 Linking the Databases
 ---------------------
 
-Before running the web app, you must tell SnapAssist where your tables are by
-setting the environmental variable::
+Before running the web app, you must tell SnapAssist where your metadata tables
+are by setting the environmental variable::
 
     export FLICKR_TABLES_FOLDER='/PATH/TO/YOUR/FOLDER/'
 
 Running the Web App
 -------------------
 
-To run the app locally, use the ``run_webapp.py`` script.  On a server, I
-recommend using `gunicorn <https://gunicorn.org/>`_ server, which is launched
-using the command::
+To run the app locally, use the ``run_webapp.py`` script in the root directory.
+On a server, I recommend using the `gunicorn <https://gunicorn.org/>`_ server,
+which is launched using the command::
 
     gunicorn snapassist.web::app
 
 To use gunicorn, you will need to add the ``snapassist`` root folder to your
-Python PATH.
+Python path.
 
 Credits
 =======
