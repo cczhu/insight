@@ -6,12 +6,15 @@ Welcome to the repository for SnapAssist, the web application for perfect
 picture planning!  SnapAssist leverages geotagged photo metadata scraped from
 the `Flickr <https://www.flickr.com/>`_ to determine the most popular
 photography viewpoints around the Greater Toronto area for any given subject
-matter. The app is currently served (using Amazon AWS) at `snapassist.site
-<https://snapassist.site/>`_.
+matter.  The app was previously served on Amazon AWS and has been taken down,
+but a `demo of its operation <https://youtu.be/PinyQLDiJ44>`_ is on YouTube.
+
+.. image:: docs/youtube_demo_banner.jpg
+   :target: https://youtu.be/PinyQLDiJ44
 
 SnapAssist was created by Chenchong Charles Zhu as part of the Fall 2018 Insight
-Data Science fellowship in Toronto.  Its companion presentation can be found on
-`Youtube <https://youtu.be/UKqM4mM3-Mw>`_.
+Data Science fellowship in Toronto.  Its companion presentation can also
+be `found on YouTube <https://youtu.be/UKqM4mM3-Mw>`_.
 
 How Does SnapAssist Work?
 =========================
